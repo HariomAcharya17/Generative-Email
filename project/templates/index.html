@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generative Email</title>
+ <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="bg"></div> 
+
+  <div class="container">
+    <h1>Generative Email</h1>
+
+    <form method="POST" autocomplete="off">
+  <input type="hidden" name="action" value="generate">
+
+  <label>Sender Name:</label>
+  <input type="text" name="sender" required autocomplete="off">
+
+  <label>Receiver Name:</label>
+  <input type="text" name="receiver" required autocomplete="off">
+
+  <label>Topic:</label>
+  <input type="text" name="topic" required autocomplete="off">
+
+  
+  <label>Email Length</label>
+<select name="wordcount" required class="select-glass">
+  <option value="25">25 words</option>
+  <option value="50">50 words</option>
+  <option value="100" selected>100 words</option>
+  <option value="150">150 words</option>
+</select>
+
+  <div class="buttons">
+    <button type="submit" name="tone" value="professional">Professional</button>
+    <button type="submit" name="tone" value="business">Business</button>
+    <button type="submit" name="tone" value="friendly">Friendly</button>
+  </div>
+
+  <div class="buttons">
+    <button type="submit" name="action" value="reset" class="reset-button">Reset</button>
+  </div>
+</form>
+   <div id="loader" class="loader-container" style="display: none;">
+  <p class="loading-text">Analyzing<span class="dots"></span></p>
+</div>
+  
+</div>
+{% if email %}
+  <div id="resultBlock">
+    <h2>Generated Email:</h2>
+    <pre id="emailText">{{ email }}</pre>
+
+    <div class="copy-download-buttons">
+  <button type="button" onclick="copyEmail()" class="utility-button small">Copy Email</button>
+  <button type="button" onclick="downloadEmail()" class="utility-button small">Download Email</button>
+</div>
+  </div>
+{% endif %}
+  </div>
+<script>
+  function copyEmail() {
+    const text = document.getElementById('emailText').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Email copied to clipboard!");
+    });
+  }
+
+  function downloadEmail() {
+    const text = document.getElementById('emailText').innerText;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.download = "email.txt";
+    link.href = URL.createObjectURL(blob);
+    link.click();
+  }
+</script>
+  <script>
+    const h1 = document.querySelector('.container h1');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          h1.classList.add('visible');
+        }
+      });
+    });
+    observer.observe(h1);
+  </script>
+  <script>
+  const form = document.querySelector('form');
+  const loader = document.getElementById('loader');
+
+  form.addEventListener('submit', () => {
+    loader.style.display = 'block';
+  });
+</script>
+<script>
+  window.onload = () => {
+    const result = document.getElementById("resultBlock");
+    if (result) result.scrollIntoView({ behavior: 'smooth' });
+  };
+</script>
+</body>
+</html>
