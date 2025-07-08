@@ -1,7 +1,13 @@
 from flask import Flask, request, render_template
-import subprocess
+import os
+import requests
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
+
+# Load Groq API Key from environment variable
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -9,7 +15,6 @@ def index():
 
     if request.method == 'POST':
         if request.form.get('action') == 'reset':
-            # Just reload the form, clearing everything
             return render_template("index.html", email=None)
 
         sender = request.form['sender']
@@ -21,13 +26,24 @@ def index():
         prompt = f"Write a {tone} email from {sender} to {receiver} about {topic} in about {wordcount} words."
 
         try:
-            result = subprocess.run(
-                ['ollama', 'run', 'mistral'],
-                input=prompt.encode('utf-8'),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            email = result.stdout.decode('utf-8') or result.stderr.decode('utf-8')
+            # Groq API call
+            headers = {
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            }
+
+            data = {
+                "model": "mixtral-8x7b-32768",  # You can also try "llama3-8b-8192"
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7
+            }
+
+            response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=data)
+            response.raise_for_status()
+            email = response.json()["choices"][0]["message"]["content"]
+
         except Exception as e:
             email = f"Error: {str(e)}"
 
